@@ -1,4 +1,4 @@
-# Docker image for ubuntu using the ubuntu template
+# Docker image for ubuntu
 ARG LICENSE="MIT"
 ARG IMAGE_NAME="ubuntu"
 ARG PHP_SERVER="ubuntu"
