@@ -17,12 +17,12 @@ ARG NODE_MANAGER="system"
 
 ARG USER="root"
 ARG DISTRO_VERSION="focal"
-ARG CONTAINER_VERSION="latest"
+ARG CONTAINER_VERSION="${DISTRO_VERSION}"
 ARG IMAGE_VERSION="${DISTRO_VERSION}"
 ARG BUILD_VERSION="${DISTRO_VERSION}"
 ARG IMAGE_REPO="${IMAGE_REPO}"
 
-FROM casjaysdevdocker/ubuntu:${IMAGE_VERSION} AS build
+FROM ubuntu:${DISTRO_VERSION} AS build
 ARG USER
 ARG LICENSE
 ARG LANGUAGE
@@ -146,4 +146,3 @@ EXPOSE $EXPOSE_PORTS
 #CMD [ "" ]
 ENTRYPOINT [ "tini", "-p", "SIGTERM", "--", "/usr/local/bin/entrypoint.sh" ]
 HEALTHCHECK --start-period=1m --interval=2m --timeout=3s CMD [ "/usr/local/bin/entrypoint.sh", "healthcheck" ]
-
