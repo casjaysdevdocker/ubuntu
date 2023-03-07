@@ -22,7 +22,7 @@ ARG NODE_VERSION="system"
 ARG NODE_MANAGER="system"
 
 ARG USER="root"
-ARG DISTRO_VERSION="focal"
+ARG DISTRO_VERSION="jammy"
 ARG BUILD_VERSION="${DISTRO_VERSION}"
 
 FROM tianon/gosu:latest AS gosu
