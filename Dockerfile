@@ -1,13 +1,19 @@
-# Docker image for ubuntu
+# Docker image for ubuntu using the ubuntu template
 ARG LICENSE="MIT"
 ARG IMAGE_NAME="ubuntu"
 ARG PHP_SERVER="ubuntu"
-ARG BUILD_DATE="Sun Feb 26 01:12:59 PM EST 2023"
+ARG BUILD_DATE="Mon Mar  6 08:59:09 PM EST 2023"
 ARG LANGUAGE="en_US.UTF-8"
 ARG TIMEZONE="America/New_York"
+ARG WWW_ROOT_DIR="/data/htdocs"
+ARG DEFAULT_FILE_DIR="/usr/local/share/template-files"
 ARG DEFAULT_DATA_DIR="/usr/local/share/template-files/data"
 ARG DEFAULT_CONF_DIR="/usr/local/share/template-files/config"
 ARG DEFAULT_TEMPLATE_DIR="/usr/local/share/template-files/defaults"
+
+ARG IMAGE_REPO="ubuntu"
+ARG IMAGE_VERSION="latest"
+ARG CONTAINER_VERSION="${IMAGE_VERSION}"
 
 ARG SERVICE_PORT=""
 ARG EXPOSE_PORTS=""
@@ -17,12 +23,10 @@ ARG NODE_MANAGER="system"
 
 ARG USER="root"
 ARG DISTRO_VERSION="focal"
-ARG CONTAINER_VERSION="${DISTRO_VERSION}"
-ARG IMAGE_VERSION="${DISTRO_VERSION}"
 ARG BUILD_VERSION="${DISTRO_VERSION}"
-ARG IMAGE_REPO="${IMAGE_REPO}"
 
-FROM ubuntu:${DISTRO_VERSION} AS build
+FROM tianon/gosu:latest AS gosu
+FROM ${IMAGE_REPO}:${IMAGE_VERSION} AS build
 ARG USER
 ARG LICENSE
 ARG LANGUAGE
@@ -35,12 +39,15 @@ ARG EXPOSE_PORTS
 ARG NODE_VERSION
 ARG NODE_MANAGER
 ARG BUILD_VERSION
+ARG WWW_ROOT_DIR
+ARG DEFAULT_FILE_DIR
 ARG DEFAULT_DATA_DIR
 ARG DEFAULT_CONF_DIR
 ARG DEFAULT_TEMPLATE_DIR
 ARG DISTRO_VERSION
 
-ARG PACK_LIST="bash bash-completion sudo tini xz-utils iproute2 locales procps net-tools"
+ARG PACK_LIST="bash bash-completion git curl wget sudo tini xz-utils iproute2 locales procps net-tools bsd-mailx  \
+  "
 
 ENV ENV=~/.bashrc
 ENV SHELL="/bin/sh"
@@ -55,6 +62,7 @@ ENV DEBIAN_FRONTEND="noninteractive"
 USER ${USER}
 WORKDIR /root
 
+COPY --from=gosu /usr/local/bin/gosu /usr/local/bin/gosu
 COPY ./rootfs/. /
 
 RUN set -ex; \
@@ -66,10 +74,15 @@ RUN set -ex; \
   [ -z "$UBUNTU_CODENAME" ] || sed -i "s|$UBUNTU_CODENAME|$DISTRO_VERSION|g" "/etc/apt/sources.list" ; \
   apt-get update -yy && apt-get upgrade -yy && apt-get install -yy ${PACK_LIST}
 
-RUN echo
+RUN set -ex ; \
+  echo
+
+RUN [ -f "/usr/local/etc/docker/env/default.sample" ] && [ -d "/etc/profile.d" ] && \
+  cp -Rf "/usr/local/etc/docker/env/default.sample" "/etc/profile.d/container.env.sh" && chmod 755 "/etc/profile.d/container.env.sh"
 
 RUN echo 'Running cleanup' ; \
   apt-get clean ; \
+  rm -Rf "/config" "/data" ; \
   rm -rf /etc/systemd/system/*.wants/* ; \
   rm -rf /lib/systemd/system/systemd-update-utmp* ; \
   rm -rf /lib/systemd/system/local-fs.target.wants/* ; \
@@ -129,6 +142,7 @@ ENV container="docker"
 ENV LANG="${LANGUAGE}"
 ENV TERM="xterm-256color"
 ENV PORT="${SERVICE_PORT}"
+ENV ENV_PORTS="${EXPOSE_PORTS}"
 ENV PHP_SERVER="${PHP_SERVER}"
 ENV PHP_VERSION="${PHP_VERSION}"
 ENV NODE_VERSION="${NODE_VERSION}"
@@ -141,8 +155,9 @@ COPY --from=build /. /
 
 VOLUME [ "/config","/data" ]
 
-EXPOSE $EXPOSE_PORTS
+EXPOSE ${EXPOSE_PORTS}
 
 #CMD [ "" ]
 ENTRYPOINT [ "tini", "-p", "SIGTERM", "--", "/usr/local/bin/entrypoint.sh" ]
 HEALTHCHECK --start-period=1m --interval=2m --timeout=3s CMD [ "/usr/local/bin/entrypoint.sh", "healthcheck" ]
+
