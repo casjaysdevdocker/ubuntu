@@ -77,7 +77,7 @@ RUN set -ex; \
 RUN touch "/etc/profile" "/root/.profile" ; \
   [ -f "/etc/bash/bashrc" ] && cp -Rf "/etc/bash/bashrc" "/root/.bashrc" || [ -f "/etc/bashrc" ] && cp -Rf "/etc/bashrc" "/root/.bashrc" ; \
   sed -i 's|root:x:.*|root:x:0:0:root:/root:/bin/bash|g' "/etc/passwd" ; \
-  grep -s -q 'alias quit' "/root/.bashrc" || printf '# Profile\n\n%s\n%s\n%s\n' '. /etc/profile' '. /root/.profile' "alias quit='exit 0 2>/dev/null'" >>"/root/.bashrc" ; \
+  grep -s -q 'alias quit' "/root/.bashrc" || printf '# Profile\n\n%s\n' "alias quit='exit 0 2>/dev/null'" >>"/root/.bashrc" ; \
   [ -f "/usr/local/etc/docker/env/default.sample" ] && [ -d "/etc/profile.d" ] && \
   cp -Rf "/usr/local/etc/docker/env/default.sample" "/etc/profile.d/container.env.sh" && chmod 755 "/etc/profile.d/container.env.sh" ; \
   update-alternatives --install /bin/sh sh /bin/bash 1
