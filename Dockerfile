@@ -2,7 +2,7 @@
 ARG LICENSE="MIT"
 ARG IMAGE_NAME="ubuntu"
 ARG PHP_SERVER="ubuntu"
-ARG BUILD_DATE="Mon Mar  6 08:59:09 PM EST 2023"
+ARG BUILD_DATE="Tue Mar  7 07:34:42 PM EST 2023"
 ARG LANGUAGE="en_US.UTF-8"
 ARG TIMEZONE="America/New_York"
 ARG WWW_ROOT_DIR="/data/htdocs"
@@ -12,8 +12,8 @@ ARG DEFAULT_CONF_DIR="/usr/local/share/template-files/config"
 ARG DEFAULT_TEMPLATE_DIR="/usr/local/share/template-files/defaults"
 
 ARG IMAGE_REPO="ubuntu"
-ARG IMAGE_VERSION="latest"
-ARG CONTAINER_VERSION="${IMAGE_VERSION}"
+ARG IMAGE_VERSION="jammy"
+ARG CONTAINER_VERSION="latest"
 
 ARG SERVICE_PORT=""
 ARG EXPOSE_PORTS=""
@@ -22,7 +22,7 @@ ARG NODE_VERSION="system"
 ARG NODE_MANAGER="system"
 
 ARG USER="root"
-ARG DISTRO_VERSION="jammy"
+ARG DISTRO_VERSION="${IMAGE_VERSION}"
 ARG BUILD_VERSION="${DISTRO_VERSION}"
 
 FROM tianon/gosu:latest AS gosu
@@ -74,25 +74,32 @@ RUN set -ex; \
   [ -z "$UBUNTU_CODENAME" ] || sed -i "s|$UBUNTU_CODENAME|$DISTRO_VERSION|g" "/etc/apt/sources.list" ; \
   apt-get update -yy && apt-get upgrade -yy && apt-get install -yy ${PACK_LIST}
 
+RUN touch "/etc/profile" "/root/.profile" ; \
+  [ -f "/etc/bash/bashrc" ] && cp -Rf "/etc/bash/bashrc" "/root/.bashrc" || [ -f "/etc/bashrc" ] && cp -Rf "/etc/bashrc" "/root/.bashrc" ; \
+  sed -i 's|root:x:.*|root:x:0:0:root:/root:/bin/bash|g' "/etc/passwd" ; \
+  grep -s -q 'alias quit' "/root/.bashrc" || printf '# Profile\n\n%s\n%s\n%s\n' '. /etc/profile' '. /root/.profile' "alias quit='exit 0 2>/dev/null'" >>"/root/.bashrc" ; \
+  [ -f "/usr/local/etc/docker/env/default.sample" ] && [ -d "/etc/profile.d" ] && \
+  cp -Rf "/usr/local/etc/docker/env/default.sample" "/etc/profile.d/container.env.sh" && chmod 755 "/etc/profile.d/container.env.sh" ; \
+  update-alternatives --install /bin/sh sh /bin/bash 1
+
 RUN set -ex ; \
   echo
 
-RUN [ -f "/usr/local/etc/docker/env/default.sample" ] && [ -d "/etc/profile.d" ] && \
-  cp -Rf "/usr/local/etc/docker/env/default.sample" "/etc/profile.d/container.env.sh" && chmod 755 "/etc/profile.d/container.env.sh"
-
 RUN echo 'Running cleanup' ; \
-  apt-get clean ; \
-  rm -Rf "/config" "/data" ; \
+  apt-get clean
+
+RUN rm -Rf "/config" "/data" ; \
   rm -rf /etc/systemd/system/*.wants/* ; \
   rm -rf /lib/systemd/system/systemd-update-utmp* ; \
+  rm -rf /lib/systemd/system/anaconda.target.wants/*; \
   rm -rf /lib/systemd/system/local-fs.target.wants/* ; \
-  update-alternatives --install /bin/sh sh /bin/bash 1 ; \
   rm -rf /lib/systemd/system/multi-user.target.wants/* ; \
   rm -rf /lib/systemd/system/sockets.target.wants/*udev* ; \
   rm -rf /lib/systemd/system/sockets.target.wants/*initctl* ; \
-  rm -Rf /usr/share/doc/* /usr/share/info/* /tmp/* /var/tmp/* ; \
-  rm -Rf /usr/local/bin/.gitkeep /config /data /var/lib/apt/lists/* ; \
+  rm -Rf /usr/share/doc/* /usr/share/info/* /tmp/* /var/tmp/* /var/cache/*/* ; \
   if [ -d "/lib/systemd/system/sysinit.target.wants" ]; then cd "/lib/systemd/system/sysinit.target.wants" && rm -f $(ls | grep -v systemd-tmpfiles-setup) ; fi
+
+RUN echo "Init done"
 
 FROM scratch
 ARG USER
@@ -160,4 +167,3 @@ EXPOSE ${EXPOSE_PORTS}
 #CMD [ "" ]
 ENTRYPOINT [ "tini", "-p", "SIGTERM", "--", "/usr/local/bin/entrypoint.sh" ]
 HEALTHCHECK --start-period=1m --interval=2m --timeout=3s CMD [ "/usr/local/bin/entrypoint.sh", "healthcheck" ]
-
