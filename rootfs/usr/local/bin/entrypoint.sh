@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  GEN_SCRIPT_REPLACE_VERSION
-# @@Author           :  GEN_SCRIPT_REPLACE_AUTHOR
-# @@Contact          :  GEN_SCRIPT_REPLACE_EMAIL
-# @@License          :  GEN_SCRIPT_REPLACE_LICENSE
-# @@ReadME           :  GEN_SCRIPT_REPLACE_FILENAME --help
-# @@Copyright        :  GEN_SCRIPT_REPLACE_COPYRIGHT
-# @@Created          :  GEN_SCRIPT_REPLACE_DATE
-# @@File             :  GEN_SCRIPT_REPLACE_FILENAME
-# @@Description      :  entrypoint point for GEN_SCRIPT_REPLACE_APPNAME
-# @@Changelog        :  GEN_SCRIPT_REPLACE_CHANGELOG
-# @@TODO             :  GEN_SCRIPT_REPLACE_TODO
-# @@Other            :  GEN_SCRIPT_REPLACE_OTHER
-# @@Resource         :  GEN_SCRIPT_REPLACE_RES
-# @@Terminal App     :  GEN_SCRIPT_REPLACE_TERMINAL
-# @@sudo/root        :  GEN_SCRIPT_REPLACE_SUDO
+##@Version           :  202303080946-git
+# @@Author           :  Jason Hempstead
+# @@Contact          :  jason@casjaysdev.com
+# @@License          :  WTFPL
+# @@ReadME           :  entrypoint.sh --help
+# @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
+# @@Created          :  Wednesday, Mar 08, 2023 09:46 EST
+# @@File             :  entrypoint.sh
+# @@Description      :  entrypoint point for ubuntu
+# @@Changelog        :  New script
+# @@TODO             :  Better documentation
+# @@Other            :  
+# @@Resource         :  
+# @@Terminal App     :  no
+# @@sudo/root        :  no
 # @@Template         :  other/docker-entrypoint
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set bash options
@@ -133,7 +133,7 @@ __create_env "/config/env/default.sh" "/root/env.sh" &>/dev/null
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Show start message
 if [ "$CONFIG_DIR_INITIALIZED" = "false" ] || [ "$DATA_DIR_INITIALIZED" = "false" ]; then
-  [ "$ENTRYPOINT_MESSAGE" = "yes" ] && echo "Executing entrypoint script for GEN_SCRIPT_REPLACE_APPNAME"
+  [ "$ENTRYPOINT_MESSAGE" = "yes" ] && echo "Executing entrypoint script for ubuntu"
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set timezone
