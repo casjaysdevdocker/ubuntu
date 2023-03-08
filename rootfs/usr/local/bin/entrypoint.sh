@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202303071934-git
-# @@Author           :  Jason Hempstead
-# @@Contact          :  jason@casjaysdev.com
-# @@License          :  WTFPL
-# @@ReadME           :  entrypoint.sh --help
-# @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
-# @@Created          :  Tuesday, Mar 07, 2023 19:34 EST
-# @@File             :  entrypoint.sh
-# @@Description      :  entrypoint point for ubuntu
-# @@Changelog        :  New script
-# @@TODO             :  Better documentation
-# @@Other            :  
-# @@Resource         :  
-# @@Terminal App     :  no
-# @@sudo/root        :  no
+##@Version           :  GEN_SCRIPT_REPLACE_VERSION
+# @@Author           :  GEN_SCRIPT_REPLACE_AUTHOR
+# @@Contact          :  GEN_SCRIPT_REPLACE_EMAIL
+# @@License          :  GEN_SCRIPT_REPLACE_LICENSE
+# @@ReadME           :  GEN_SCRIPT_REPLACE_FILENAME --help
+# @@Copyright        :  GEN_SCRIPT_REPLACE_COPYRIGHT
+# @@Created          :  GEN_SCRIPT_REPLACE_DATE
+# @@File             :  GEN_SCRIPT_REPLACE_FILENAME
+# @@Description      :  entrypoint point for GEN_SCRIPT_REPLACE_APPNAME
+# @@Changelog        :  GEN_SCRIPT_REPLACE_CHANGELOG
+# @@TODO             :  GEN_SCRIPT_REPLACE_TODO
+# @@Other            :  GEN_SCRIPT_REPLACE_OTHER
+# @@Resource         :  GEN_SCRIPT_REPLACE_RES
+# @@Terminal App     :  GEN_SCRIPT_REPLACE_TERMINAL
+# @@sudo/root        :  GEN_SCRIPT_REPLACE_SUDO
 # @@Template         :  other/docker-entrypoint
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set bash options
@@ -98,7 +98,6 @@ __run_pre() {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __run_message() {
   if [ "$ENTRYPOINT_MESSAGE" = "yes" ]; then
-    echo "Initialized on: $INIT_DATE"
     echo "Container ip address is: $CONTAINER_IP4_ADDRESS"
 
   fi
@@ -120,8 +119,9 @@ export DEFAULT_TEMPLATE_DIR="${DEFAULT_TEMPLATE_DIR:-/usr/local/share/template-f
 [ -n "$BACKUP_DIR" ] && [ -d "$BACKUP_DIR" ] || mkdir -p "$BACKUP_DIR"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # create required directories
+mkdir -p "/run/init.d"
 mkdir -p "/config/secure"
-mkdir -p "/run" && chmod -f 755 "/run"
+mkdir -p "/run" && chmod -f 777 "/run" "/run/init.d"
 mkdir -p "/tmp" && chmod -f 755 "/tmp"
 mkdir -p "/root" && chmod -f 700 "/root"
 [ -f "/config/.enable_ssh" ] && export SSL_ENABLED="true"
@@ -133,7 +133,7 @@ __create_env "/config/env/default.sh" "/root/env.sh" &>/dev/null
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Show start message
 if [ "$CONFIG_DIR_INITIALIZED" = "false" ] || [ "$DATA_DIR_INITIALIZED" = "false" ]; then
-  [ "$ENTRYPOINT_MESSAGE" = "yes" ] && echo "Executing entrypoint script for ubuntu"
+  [ "$ENTRYPOINT_MESSAGE" = "yes" ] && echo "Executing entrypoint script for GEN_SCRIPT_REPLACE_APPNAME"
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set timezone
@@ -221,25 +221,6 @@ if [ -n "$DEFAULT_CONF_DIR" ]; then
   fi
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Copy /config to /etc
-if [ -d "/config" ]; then
-  if [ "$CONFIG_DIR_INITIALIZED" = "false" ]; then
-    echo "Copying custom config files: /config > /etc"
-    for create_config_name in /config/*; do
-      if [ -n "$create_config_name" ]; then
-        create_conf_name="$(basename "$create_config_name")"
-        if [ -d "/etc/$create_conf_name" ] && [ -d "$create_config_name" ]; then
-          mkdir -p "/etc/$create_conf_name/"
-          cp -Rf "$create_config_name/." "/etc/$create_conf_name/" 2>/dev/null
-        elif [ -e "/etc/$create_conf_name" ] && [ -e "$create_config_name" ]; then
-          cp -Rf "$create_config_name" "/etc/$create_conf_name" 2>/dev/null
-        fi
-      fi
-    done
-    unset create_config_name create_conf_name
-  fi
-fi
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Copy custom data files
 if [ -d "/data" ]; then
   if [ "$DATA_DIR_INITIALIZED" = "false" ] && [ -n "$DEFAULT_DATA_DIR" ]; then
@@ -256,6 +237,25 @@ if [ -d "/data" ]; then
       fi
     done
     unset create_template
+  fi
+fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Copy /config to /etc
+if [ -d "/config" ]; then
+  if [ "$CONFIG_DIR_INITIALIZED" = "false" ]; then
+    echo "Copy config files to system: /config > /etc"
+    for create_config_name in /config/*; do
+      if [ -n "$create_config_name" ]; then
+        create_conf_name="$(basename "$create_config_name")"
+        if [ -d "/etc/$create_conf_name" ] && [ -d "$create_config_name" ]; then
+          mkdir -p "/etc/$create_conf_name/"
+          cp -Rf "$create_config_name/." "/etc/$create_conf_name/" 2>/dev/null
+        elif [ -e "/etc/$create_conf_name" ] && [ -e "$create_config_name" ]; then
+          cp -Rf "$create_config_name" "/etc/$create_conf_name" 2>/dev/null
+        fi
+      fi
+    done
+    unset create_config_name create_conf_name
   fi
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -336,8 +336,7 @@ START_SERVICES="${START_SERVICES:-SYSTEM_INIT}"
 case "$1" in
 --help) # Help message
   echo 'Docker container for '$APPNAME''
-  echo "Usage: $APPNAME [healthcheck, ports, procs, bash, certbot, backup, command]"
-  echo "Failed command will have exit code 10"
+  echo "Usage: $APPNAME [exec start init shell certbot ssl procs ports healthcheck backup command]"
   echo ""
   exit 0
   ;;
@@ -456,8 +455,8 @@ exec) # execute commands
   ;;
 
 *) # Execute primary command
-  if [ "$START_SERVICES" = "yes" ] && [ ! -f "/run/entrypoint.init.pid" ]; then
-    echo "$$" >"/run/entrypoint.init.pid"
+  if [ "$START_SERVICES" = "yes" ] && [ ! -f "/run/init.d/entrypoint.pid" ]; then
+    echo "$$" >"/run/init.d/entrypoint.pid"
     __start_init_scripts "/usr/local/etc/docker/init.d" && sleep 3 || sleep 1
     [ -n "$1" ] && exec "$*" || exec "${SHELL:-bash -l}"
     exit 0

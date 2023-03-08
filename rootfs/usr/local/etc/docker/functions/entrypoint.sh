@@ -37,19 +37,25 @@ __setup_ssl() {
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __certbot() {
-  local options="${1:-create}" && shift 1
-  domain_list="$DOMAINNAME www.$DOMAINNAME mail.$DOMAINNAME $CERTBOT_DOMAINS"
-  [ -f "/config/env/ssl.sh" ] && . "/config/env/ssl.sh"
-  [ "$SSL_CERT_BOT" = "true" ] && [ -f "$(type -P certbot)" ] || { export SSL_CERT_BOT="" && return 10; }
-  [ -n "$CERT_BOT_MAIL" ] || echo "The variable CERT_BOT_MAIL is not set" && return 1
-  [ -n "$DOMAINNAME" ] || echo "The variable DOMAINNAME is not set" && return 1
-  for domain in $$CERTBOT_DOMAINS; do
-    [ -n "$domain" ] && ADD_CERTBOT_DOMAINS="-d $domain "
-  done
-  certbot $options --agree-tos -m $CERT_BOT_MAIL certonly --webroot \
-    -w "${WWW_ROOT_DIR:-/data/htdocs/www}" \
-    $ADD_CERTBOT_DOMAINS --put-all-related-files-into "$SSL_DIR" \
-    -key-path "$SSL_KEY" -fullchain-path "$SSL_CERT" && __setup_ssl
+  if [ -f "/config/bin/certbot.sh" ]; then
+    "/config/bin/certbot.sh"
+  elif [ -f "/etc/named/certbot.sh" ]; then
+    "/etc/named/certbot.sh"
+  else
+    local options="${1:-create}" && shift 1
+    domain_list="$DOMAINNAME www.$DOMAINNAME mail.$DOMAINNAME $CERTBOT_DOMAINS"
+    [ -f "/config/env/ssl.sh" ] && . "/config/env/ssl.sh"
+    [ "$SSL_CERT_BOT" = "true" ] && [ -f "$(type -P certbot)" ] || { export SSL_CERT_BOT="" && return 10; }
+    [ -n "$CERT_BOT_MAIL" ] || echo "The variable CERT_BOT_MAIL is not set" && return 1
+    [ -n "$DOMAINNAME" ] || echo "The variable DOMAINNAME is not set" && return 1
+    for domain in $$CERTBOT_DOMAINS; do
+      [ -n "$domain" ] && ADD_CERTBOT_DOMAINS="-d $domain "
+    done
+    certbot $options --agree-tos -m $CERT_BOT_MAIL certonly --webroot \
+      -w "${WWW_ROOT_DIR:-/data/htdocs/www}" \
+      $ADD_CERTBOT_DOMAINS --put-all-related-files-into "$SSL_DIR" \
+      -key-path "$SSL_KEY" -fullchain-path "$SSL_CERT" && __setup_ssl
+  fi
   return $?
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -421,11 +427,11 @@ FromLineOverride=yes
 #AuthPass=password
 
 EOF
-    # if [ -f "/config/ssmtp/ssmtp.conf" ] && [ ! -f "/run/ssmtp.init.pid" ]; then
+    # if [ -f "/config/ssmtp/ssmtp.conf" ] && [ ! -f "/run/init.d/ssmtp.pid" ]; then
     # SERVICES_LIST+="ssmtp "
     # cp -Rf "/config/ssmtp/." "/etc/ssmtp/"
     # __exec_command ssmtp "/etc/ssmtp/ssmtp.conf" &
-    # [ $? -eq 0 ] && touch "/run/ssmtp.init.pid" || exitCode=1
+    # [ $? -eq 0 ] && touch "/run/init.d/ssmtp.pid" || exitCode=1
     # fi
     # postfix relay setup
   elif [ -d "/config/postfix" ] || [ -d "/etc/postfix" ]; then
@@ -460,11 +466,11 @@ EOF
     touch "/etc/postfix/mydomains.pcre" "/etc/postfix/mydomains" "/etc/postfix/virtual"
     postmap "/etc/aliases" "/etc/postfix/mynetworks" "/etc/postfix/transport" &>/dev/null
     postmap "/etc/postfix/mydomains.pcre" "/etc/postfix/mydomains" "/etc/postfix/virtual" &>/dev/null
-    if [ -f "/config/postfix/main.cf" ] && [ ! -f "/run/postfix.init.pid" ]; then
+    if [ -f "/config/postfix/main.cf" ] && [ ! -f "/run/init.d/postfix.pid" ]; then
       SERVICES_LIST+="postfix "
       cp -Rf "/config/postfix/." "/etc/postfix/"
       __exec_command postfix "/etc/postfix/main.cf" &
-      [ $? -eq 0 ] && touch "/run/postfix.init.pid" || exitCode=1
+      [ $? -eq 0 ] && touch "/run/init.d/postfix.pid" || exitCode=1
     fi
   fi
   [ -f "/root/dead.letter" ] && rm -Rf "/root/dead.letter"
